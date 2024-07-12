@@ -10,12 +10,10 @@ import streamlit as st
 from dotenv import load_dotenv
 from numpy.linalg import norm
 
-"""loaded local env"""
 load_dotenv()
 
 api=os.getenv('API_KEY')
 base=os.getenv('BASE')
-"""default settings for generation of text"""
 TEMPERATURE = 0.5
 MAX_TOKENS = 200
 text=""
@@ -23,7 +21,6 @@ result=None
 
 co=cohere.Client(api)
 
-"""Get the text from pdf file."""
 def extractTextFromPdf(pdfPath: str):
     text = ""
     with pdfplumber.open(pdfPath) as pdf:
@@ -31,7 +28,6 @@ def extractTextFromPdf(pdfPath: str):
             text += page.extract_text()
     return text
 
-"""Creating a dataframe to break information into user defined Chunks."""
 def processTextInput(text: str, run_id: str = None):
     text = StringIO(text).read()
     CHUNK_SIZE=150
@@ -40,18 +36,15 @@ def processTextInput(text: str, run_id: str = None):
     df = pd.DataFrame.from_dict({'text': chunks})
     return df
 
-"""Converting the dataframe to list of strings."""
 def convertToList(df):
     df['col']=df[['text']].apply(lambda row: ' '.join(row.dropna().astype(str)), axis=1)
     seqOfStrings: Sequence[str]=df['col'].tolist()
     return seqOfStrings
 
-# Using the Cohere embed endpoint to embed the data into vector data.
 def embed(Texts: Sequence[str]):
     res=co.embed(texts=Texts, model="small")
     return res.embeddings
 
-"""Finding K nearest neighbours to enhance the answer."""
 def topNNeighbours(promptEmbeddings: np.ndarray, storageEmbeddings: np.ndarray, df, k: int = 5):
 	if isinstance(storageEmbeddings, list):
 		storageEmbeddings = np.array(storageEmbeddings)
@@ -66,12 +59,10 @@ def topNNeighbours(promptEmbeddings: np.ndarray, storageEmbeddings: np.ndarray, 
 		neighbourValues.append(listOfStr[idx])
 	return neighbourValues
 
-"""Using the Cohere generate endpoint to return the answer into text data with additional options namely 'temperature' and 'max_tokens'"""
 def generate(promptt, tmp, maxTokens):
     res=co.generate(prompt=promptt, temperature=tmp, max_tokens=maxTokens)
     return res
 
-"""Using the streamlit library to create a user interface for better understanding."""
 st.title("DocBot - Chat with documents.")
 st.caption("powered by Cohere ⌘R")
 options=st.selectbox("Input type", ["PDF","TEXT"])
