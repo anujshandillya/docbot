@@ -25,6 +25,8 @@ client = chromadb.PersistentClient(path="./chroma_db")
 
 
 class OllamaEmbeddingFunction(EmbeddingFunction):
+    def __init__(self):
+        super().__init__(name="ollama", embedding_dim=4096)
     def __call__(self, input: Documents) -> Embeddings:
         return [
             ollama.embeddings(model=EMBED_MODEL, prompt=t)["embedding"]
